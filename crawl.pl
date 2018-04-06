@@ -2,10 +2,24 @@
 
 use Modern::Perl;
 use WWW::Mechanize;
+use Domain::PublicSuffix qw( );
+use URI                  qw( );
 
 my $root = 'http://stackoverflow.com';
 my $domain = 'http://stackoverflow';
 my $mech = WWW::Mechanize->new;
+sub root_domain {
+   my ($domain) = @_;
+   state $parser = Domain::PublicSuffix->new();
+   return $parser->get_root_domain($domain);
+}
+
+# Accepts urls as strings and as URI objects.
+sub url_root_domain {
+   my ($abs_url) = @_;
+   my $domain = URI->new($abs_url)->host();
+   return root_domain($domain);
+}
 
 sub visit {
     my $url = shift;
@@ -18,21 +32,19 @@ sub visit {
 
     # Leaves domain.
     if ($url !~ /^$domain/) {
-        $rootdom = $url
-        $rootdom =~ s/www\.(.*\.(?:net|org|com)).*/$1/; 
-        print $rootdom
-        say $tab, "-> $url";
+        say url_root_domain($url);
+        say $tab, "-> $url ";
+
         return;
     }
     
     # Not seen yet.
-    $rootdom = $url
-        $rootdom =~ s/www\.(.*\.(?:net|org|com)).*/$1/; 
-        print $rootdom
     say $tab, "- $url ";
+    
     $mech->get($url);
     visit($_, $indent+2, $visited) for
         map {$_->url_abs} $mech->links;
+        
 }
 
 visit($root);
