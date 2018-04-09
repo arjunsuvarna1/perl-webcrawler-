@@ -5,8 +5,8 @@ use WWW::Mechanize;
 use Domain::PublicSuffix qw( );
 use URI                  qw( );
 
-my $root = 'http://stackoverflow.com';
-my $domain = 'http://stackoverflow';
+my $root = 'https://stackoverflow.com';
+my $domain = 'https://stackoverflow.com';
 my $mech = WWW::Mechanize->new;
 sub root_domain {
    my ($domain) = @_;
@@ -20,27 +20,25 @@ sub url_root_domain {
    my $domain = URI->new($abs_url)->host();
    return root_domain($domain);
 }
-
+open my $fh, '>', "links.txt";
 sub visit {
     my $url = shift;
     my $indent = shift || 0;
     my $visited = shift || {};
     my $tab = ' ' x $indent;
-
     # Already seen that.
     return if $visited->{$url}++;
 
     # Leaves domain.
     if ($url !~ /^$domain/) {
         say url_root_domain($url);
-        say $tab, "-> $url ";
-
-        return;
+        print $fh "$url \n";
+        return; 
     }
     
     # Not seen yet.
-    say $tab, "- $url ";
-    
+    print $domain;
+     print $fh "$url \n";
     $mech->get($url);
     visit($_, $indent+2, $visited) for
         map {$_->url_abs} $mech->links;
